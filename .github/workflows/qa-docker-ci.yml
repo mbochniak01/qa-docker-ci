@@ -18,12 +18,13 @@ jobs:
       - name: Build Docker image
         run: docker build -t qa-test .
 
-      - name: Run tests in Docker (parallel)
+      - name: Run tests in Docker
         run: |
           mkdir -p tmp/allure-results
           docker run --rm \
             -v "${{ github.workspace }}/tmp/allure-results:/usr/src/app/allure-results" \
-            qa-test || true
+            qa-test
+
 
   merge-and-upload:
     runs-on: ubuntu-latest
