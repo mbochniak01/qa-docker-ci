@@ -12,8 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        shard: [1, 2, 3]  # adjust number of shards as needed
-
+        shard: [1, 2, 3]  # number of parallel shards
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -25,8 +24,9 @@ jobs:
         run: |
           mkdir -p tmp/allure-results/shard-${{ matrix.shard }}
           docker run --rm \
-            -v "${{ github.workspace }}/tmp/allure-results/shard-${{ matrix.shard }}:/usr/src/app/allure-results" \
-            qa-test --shard ${{ matrix.shard }} || true
+            -e PYTEST_XDIST_WORKER="gw${{ matrix.shard }}" \
+            -v "${{ github.workspace }}/tmp/allure-results/shard-${{ matrix.shard }}:/usr/src/app/allure-results/$PYTEST_XDIST_WORKER" \
+            qa-test || true
 
   merge-and-upload:
     runs-on: ubuntu-latest
@@ -42,7 +42,11 @@ jobs:
         run: |
           mkdir -p tmp/allure-merged
           if [ -d tmp/allure-results ]; then
-            find tmp/allure-results -mindepth 1 -maxdepth 1 -type d -exec cp -r {}/* tmp/allure-merged/ \;
+            for shard in tmp/allure-results/*; do
+              if [ -d "$shard" ]; then
+                cp -r "$shard"/* tmp/allure-merged/
+              fi
+            done
           fi
 
           if [ "$(ls -A tmp/allure-merged)" ]; then

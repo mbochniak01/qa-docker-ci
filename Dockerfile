@@ -24,5 +24,5 @@ COPY . .
 # Create base Allure results folder
 RUN mkdir -p /usr/src/app/allure-results && chmod 777 /usr/src/app/allure-results
 
-# Default command: run pytest in parallel, each worker writes to its own shard
-CMD ["bash", "-c", "pytest -v -n auto --dist=loadfile --alluredir=/usr/src/app/allure-results/$PYTEST_XDIST_WORKER"]
+# Default command: run pytest in parallel using all cores, each worker writes to its own shard
+CMD ["bash", "-c", "pytest -v -n auto --dist=loadfile --alluredir=/usr/src/app/allure-results/\$PYTEST_XDIST_WORKER"]
