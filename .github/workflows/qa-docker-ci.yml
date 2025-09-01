@@ -28,12 +28,13 @@ jobs:
             -v "${{ github.workspace }}/tmp/allure-results:/usr/src/app/allure-results" \
             qa-test || true
 
-      # Merge Allure results
+      # Merge Allure results into a flat structure
       - name: Merge Allure results
         run: |
           mkdir -p tmp/allure-merged
           if [ -d tmp/allure-results ]; then
-            cp -r tmp/allure-results/* tmp/allure-merged/ || true
+            # Copy all JSON files from worker subfolders to tmp/allure-merged
+            find tmp/allure-results -mindepth 2 -name '*.json' -exec cp {} tmp/allure-merged/ \;
           fi
 
       # Upload Allure results (for GitHub artifact)
