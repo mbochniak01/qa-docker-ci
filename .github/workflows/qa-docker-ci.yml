@@ -10,9 +10,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        shard: [1, 2, 3]  # adjust number of shards as needed
 
     steps:
       - name: Checkout repository
@@ -21,12 +18,12 @@ jobs:
       - name: Build Docker image
         run: docker build -t qa-test .
 
-      - name: Run tests in parallel shard ${{ matrix.shard }}
+      - name: Run tests in Docker (parallel)
         run: |
-          mkdir -p tmp/allure-results/shard-${{ matrix.shard }}
+          mkdir -p tmp/allure-results
           docker run --rm \
-            -v "${{ github.workspace }}/tmp/allure-results/shard-${{ matrix.shard }}:/usr/src/app/allure-results" \
-            qa-test --alluredir=/usr/src/app/allure-results/shard-${{ matrix.shard }} --shard ${{ matrix.shard }} || true
+            -v "${{ github.workspace }}/tmp/allure-results:/usr/src/app/allure-results" \
+            qa-test || true
 
   merge-and-upload:
     runs-on: ubuntu-latest
@@ -38,7 +35,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Merge Allure shards
+      - name: Merge Allure results
         id: merge-allure
         run: |
           mkdir -p tmp/allure-merged
@@ -54,7 +51,7 @@ jobs:
 
       - name: Upload Allure Results Raw
         if: needs.merge-and-upload.outputs.allure_found == 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: allure-results
           path: tmp/allure-merged

@@ -7,9 +7,7 @@ WORKDIR /usr/src/app
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
         default-jdk \
-        python3-pip \
         unzip \
-        wget \
         bash \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
