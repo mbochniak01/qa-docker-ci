@@ -35,19 +35,22 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Merge Allure results
+      - name: Merge Allure shards
         id: merge-allure
         run: |
           mkdir -p tmp/allure-merged
           if [ -d tmp/allure-results ]; then
-            find tmp/allure-results -mindepth 1 -maxdepth 1 -type d -exec cp -r {}/* tmp/allure-merged/ \;
+            # Copy all files and directories recursively into tmp/allure-merged
+            cp -r tmp/allure-results/* tmp/allure-merged/ || true
           fi
 
+          # Check if merged folder is not empty
           if [ "$(ls -A tmp/allure-merged)" ]; then
             echo "allure_found=true" >> $GITHUB_OUTPUT
           else
             echo "allure_found=false" >> $GITHUB_OUTPUT
           fi
+
 
       - name: Upload Allure Results Raw
         if: needs.merge-and-upload.outputs.allure_found == 'true'
