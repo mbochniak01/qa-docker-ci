@@ -30,7 +30,9 @@ jobs:
         if: always()
         run: |
           mkdir -p tmp/allure-merged
-          find tmp/allure-results -mindepth 1 -maxdepth 1 -type d -exec cp -r {}/* tmp/allure-merged/ \;
+          if [ -d tmp/allure-results ]; then
+            find tmp/allure-results -mindepth 1 -maxdepth 1 -type d -exec cp -r {}/* tmp/allure-merged/ \;
+          fi
 
       - name: Upload Allure Results Raw
         if: always()
