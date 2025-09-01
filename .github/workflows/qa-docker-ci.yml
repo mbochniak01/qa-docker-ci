@@ -27,22 +27,29 @@ jobs:
             qa-test || true
 
       - name: Merge Allure shards
+        id: merge-allure
         if: always()
         run: |
           mkdir -p tmp/allure-merged
           if [ -d tmp/allure-results ]; then
             find tmp/allure-results -mindepth 1 -maxdepth 1 -type d -exec cp -r {}/* tmp/allure-merged/ \;
           fi
+          # Set output flag if merged folder is not empty
+          if [ "$(ls -A tmp/allure-merged)" ]; then
+            echo "allure_found=true" >> $GITHUB_OUTPUT
+          else
+            echo "allure_found=false" >> $GITHUB_OUTPUT
+          fi
 
       - name: Upload Allure Results Raw
-        if: always()
+        if: steps.merge-allure.outputs.allure_found == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: allure-results
           path: tmp/allure-merged
 
       - name: Generate Allure report
-        if: always()
+        if: steps.merge-allure.outputs.allure_found == 'true'
         uses: simple-elf/allure-report-action@master
         with:
           allure_results: tmp/allure-merged
