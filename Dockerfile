@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         python3-pip \
         unzip \
         wget \
+        bash \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements and install
@@ -17,12 +18,12 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt \
     && pip install --no-cache-dir pytest allure-pytest pytest-xdist
 
-# Copy static data and project code
-COPY data/ ./data/
+# Copy project code
 COPY . .
 
 # Create base Allure results folder
 RUN mkdir -p /usr/src/app/allure-results && chmod 777 /usr/src/app/allure-results
 
-# Default command: run pytest in parallel using all cores, each worker writes to its own shard
-CMD ["bash", "-c", "pytest -v -n auto --dist=loadfile --alluredir=/usr/src/app/allure-results/\$PYTEST_XDIST_WORKER"]
+# Use ENTRYPOINT so additional args can be passed via docker run
+ENTRYPOINT ["pytest"]
+CMD ["-v", "-n", "auto", "--dist=loadfile", "--alluredir=/usr/src/app/allure-results/$PYTEST_XDIST_WORKER"]
