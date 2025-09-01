@@ -10,6 +10,9 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        shard: [1, 2, 3]  # adjust number of shards as needed
 
     steps:
       - name: Checkout repository
@@ -18,23 +21,30 @@ jobs:
       - name: Build Docker image
         run: docker build -t qa-test .
 
-      - name: Run tests in parallel
-        id: run-tests
+      - name: Run tests in parallel shard ${{ matrix.shard }}
         run: |
-          mkdir -p tmp/allure-results
+          mkdir -p tmp/allure-results/shard-${{ matrix.shard }}
           docker run --rm \
-            -v "${{ github.workspace }}/tmp/allure-results:/usr/src/app/allure-results" \
-            qa-test || true
+            -v "${{ github.workspace }}/tmp/allure-results/shard-${{ matrix.shard }}:/usr/src/app/allure-results" \
+            qa-test --shard ${{ matrix.shard }} || true
+
+  merge-and-upload:
+    runs-on: ubuntu-latest
+    needs: test
+    outputs:
+      allure_found: ${{ steps.merge-allure.outputs.allure_found }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Merge Allure shards
         id: merge-allure
-        if: always()
         run: |
           mkdir -p tmp/allure-merged
           if [ -d tmp/allure-results ]; then
             find tmp/allure-results -mindepth 1 -maxdepth 1 -type d -exec cp -r {}/* tmp/allure-merged/ \;
           fi
-          # Set output flag if merged folder is not empty
+
           if [ "$(ls -A tmp/allure-merged)" ]; then
             echo "allure_found=true" >> $GITHUB_OUTPUT
           else
@@ -42,14 +52,14 @@ jobs:
           fi
 
       - name: Upload Allure Results Raw
-        if: steps.merge-allure.outputs.allure_found == 'true'
+        if: needs.merge-and-upload.outputs.allure_found == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: allure-results
           path: tmp/allure-merged
 
       - name: Generate Allure report
-        if: steps.merge-allure.outputs.allure_found == 'true'
+        if: needs.merge-and-upload.outputs.allure_found == 'true'
         uses: simple-elf/allure-report-action@master
         with:
           allure_results: tmp/allure-merged
