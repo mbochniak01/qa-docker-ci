@@ -1,0 +1,47 @@
+name: QA Docker CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t qa-test .
+
+      - name: Run tests in parallel
+        id: run-tests
+        run: |
+          mkdir -p tmp/allure-results
+          docker run --rm \
+            -v "${{ github.workspace }}/tmp/allure-results:/usr/src/app/allure-results" \
+            qa-test || true
+
+      - name: Merge Allure shards
+        if: always()
+        run: |
+          mkdir -p tmp/allure-merged
+          find tmp/allure-results -mindepth 1 -maxdepth 1 -type d -exec cp -r {}/* tmp/allure-merged/ \;
+
+      - name: Upload Allure Results Raw
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results
+          path: tmp/allure-merged
+
+      - name: Generate Allure report
+        if: always()
+        uses: simple-elf/allure-report-action@master
+        with:
+          allure_results: tmp/allure-merged
+          allure_report: allure-report
