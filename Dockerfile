@@ -24,4 +24,4 @@ RUN mkdir -p /usr/src/app/allure-results && chmod 777 /usr/src/app/allure-result
 
 # Run pytest by default (parallel) and generate Allure results
 ENTRYPOINT ["pytest"]
-CMD ["-v", "-n", "auto", "--dist=loadfile", "--alluredir=/usr/src/app/allure-results/${PYTEST_XDIST_WORKER}"]
+CMD ["-v", "-n", "auto", "--dist=load", "--alluredir=/usr/src/app/allure-results/${PYTEST_XDIST_WORKER}"]
