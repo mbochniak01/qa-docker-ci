@@ -34,7 +34,7 @@ jobs:
           mkdir -p tmp/allure-merged
           if [ -d tmp/allure-results ]; then
             # Copy all JSON files from worker subfolders to tmp/allure-merged
-            find tmp/allure-results -mindepth 2 -name '*.json' -exec cp {} tmp/allure-merged/ \;
+            find tmp/allure-results -name '*.json' -exec cp {} tmp/allure-merged/ \;
           fi
 
       # Upload Allure results (for GitHub artifact)

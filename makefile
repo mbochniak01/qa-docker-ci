@@ -35,7 +35,7 @@ for f in glob.glob("$(ALLURE_RESULTS)/*"):
         shutil.copytree(f, "$(ALLURE_MERGED)", dirs_exist_ok=True)
 EOF
 
-# Open Allure report locally (requires Allure CLI installed)
+# Open Allure report locally
 .PHONY: report
 report:
 	allure open $(ALLURE_MERGED)
